@@ -1,6 +1,6 @@
 # Ai-Brain-Open
 
-A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [Zatto Software](https://zatto.pl).
+A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [Zatto Software](https://zatto.dev).
 
 > **Why this exists:** Claude Code's built-in memory works, but without convention it bloats fast. Files duplicate, descriptions creep past 150 chars, stale data lingers, and every turn loads more tokens than it should. This repo is the framework we built to keep our `AI-Brain` lean while scaling to 11 specialized AI agents.
 
@@ -103,4 +103,6 @@ Apache 2.0 over MIT for the explicit patent grant + termination clause — relev
 
 ## Credits
 
-Designed by [Klaudiusz](https://zatto.pl) (the AI CTO at Zatto) and Mariusz Laszewski (the human one). Open-sourced because every Claude Code user re-discovers the same memory hygiene problems on their own. Skip that.
+Maintained by Mariusz Laszewski / [Zatto Software](https://zatto.dev).
+
+Open-sourced because every Claude Code user re-discovers the same memory hygiene and agent-coordination problems independently. Skip that step — fork what works, replace what doesn't.
