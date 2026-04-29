@@ -29,6 +29,12 @@ Each agent lives in its own folder with a `SKILL.md` that defines:
 
 The agents do NOT talk to each other. A coordinator (the main Claude session, or you) routes work through them. See [`examples/orchestrator-prompt.md`](../examples/orchestrator-prompt.md) for a coordinator template.
 
+## Default git workflow — branch + PR, always
+
+Every agent that writes files MUST work on a dedicated feature branch and open a PR when done. **Direct commits to `main` / `master` / `production` are a Tier 1 prohibited action** (see [`_shared/SAFETY.md`](_shared/SAFETY.md)).
+
+The agent returns the PR URL to the orchestrator as part of its standard output (see [`_shared/PATTERNS.md#branch--pr-workflow`](_shared/PATTERNS.md#branch--pr-workflow)). The orchestrator (or human) reviews + merges — agents do not self-merge.
+
 ## Common pipelines
 
 ```

@@ -107,6 +107,48 @@ When contributing to an external repo (outside your own org):
 
 **Used by:** `borys-developer`, `klio-writer`, orchestrator.
 
+## Branch + PR workflow
+
+Every agent that writes code or config MUST work on a dedicated branch and open a Pull Request when done. NEVER commit directly to `main` / `master` / `production`.
+
+**Standard flow:**
+
+```bash
+# 1. Branch from latest main
+git checkout main && git pull
+git checkout -b <type>/<short-slug>      # e.g. feat/auth-flow
+
+# 2. Work — small focused commits, conventional format
+git add <specific files>                  # never `git add .` / `git add -A`
+git commit -m "feat: add login endpoint"
+
+# 3. Push the branch
+git push -u origin <branch>
+
+# 4. Open PR with summary + verification + reviewers
+gh pr create --title "..." --body "..."   # or `glab` / `forgejo` equivalent
+
+# 5. Return the PR URL to the orchestrator
+```
+
+**Branch naming:** `<type>/<short-slug>` — types from conventional commits (`feat/`, `fix/`, `refactor/`, `chore/`, `docs/`, `test/`, `perf/`).
+
+**PR description must include:**
+- What changed and why (1-3 sentences)
+- Verification: command run + result (`✓ 47/47 passed`)
+- Screenshots for UI changes
+- Linked issue / story (if any)
+- Anything reviewer should focus on
+
+**NEVER:**
+- Commit directly to protected branches
+- Push to someone else's branch without asking
+- Force-push to `main` / `master` / shared branches
+- Open a PR without running tests + linter locally first
+- Mark the task done before reporting the PR URL
+
+**Used by:** `borys-developer`, `pixel-designer`, `daga-dba`, `olek-devops`, `klio-writer` (any agent that writes files).
+
 ## Output to orchestrator
 
 Every subagent returns a condensed report (~1-2k tokens):
@@ -114,6 +156,11 @@ Every subagent returns a condensed report (~1-2k tokens):
 ```markdown
 ## Summary
 <1-2 sentences on what was done>
+
+## Branch + PR
+- Branch: `feat/<slug>`
+- PR: <URL to the PR>
+- Status: open / draft / merged
 
 ## Files changed
 - path/to/file.ts:42-78 — <what changed>
@@ -126,5 +173,7 @@ $ npm test
 ## Follow-ups (not done, noted for later)
 - <thing you noticed but is out of scope>
 ```
+
+For agents that DON'T write files (`rena-reviewer`, `straz-security` audit-only, `sowa-researcher`, `nika-analyst` planning-only): omit the Branch + PR section, keep the rest.
 
 **Used by:** all subagents.

@@ -12,6 +12,7 @@ Every agent in this framework MUST follow these rules. No exceptions without exp
 These actions are PROHIBITED. Refuse and explain why, even if the user asks:
 
 - `git push --force` to `main` / `master` / `production` branches
+- `git commit` directly to `main` / `master` / `production` — always feature branch + PR (see [PATTERNS.md#branch--pr-workflow](PATTERNS.md#branch--pr-workflow))
 - `git reset --hard` against unpushed commits without confirming with the user
 - `rm -rf /`, `rm -rf $HOME`, `rm -rf .` from unknown working dirs
 - `DROP DATABASE`, `DROP TABLE` on production without verified recent backup
