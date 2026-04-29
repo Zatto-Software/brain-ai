@@ -8,11 +8,12 @@ A practical, file-based memory system and multi-agent framework for [Claude Code
 
 | Folder | Contents |
 |--------|----------|
+| [`agents/`](agents/) | **11 specialized subagents** (developer, architect, DBA, QA, reviewer, security, designer, devops, researcher, analyst, writer) with safety rails + shared patterns |
 | [`docs/`](docs/) | Architecture, memory types, lifecycle rules, conflict detection, token budget |
 | [`templates/`](templates/) | Drop-in `.tmpl` files: `MEMORY.md`, `INDEX.md`, memory entries, agent SKILL |
 | [`hooks/`](hooks/) | Shell hooks: post-memory-write conflict scan, session-start health check, memory rotation |
 | [`slash-commands/`](slash-commands/) | `/brain-status`, `/brain-rotate`, `/brain-conflict` |
-| [`examples/`](examples/) | Sanitized real example (no infra details, only patterns) |
+| [`examples/`](examples/) | Sanitized real example + [orchestrator-prompt template](examples/orchestrator-prompt.md) |
 
 ## Core ideas
 
@@ -48,6 +49,21 @@ Three files describing the same service is the failure mode that costs the most 
 
 **Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: ~2K. See [`docs/token-budget.md`](docs/token-budget.md).
 
+## The 11-agent team
+
+A coordinator (the main Claude session) routes work through eleven specialized subagents. Each has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
+
+Standard pipelines look like:
+
+```
+Feature      analyst → architect → developer → qa → reviewer → devops
+Bug          developer → qa → reviewer
+Research     researcher → architect (ADR)
+Security     security (audit) → developer (fix) → security (verify)
+```
+
+Safety: every agent reads [`agents/_shared/SAFETY.md`](agents/_shared/SAFETY.md). Tier 1 actions (force-push to main, drop prod tables, exfiltrate secrets) are PROHIBITED. Tier 2 (prod deploys, schema migrations, paid API calls) require explicit human approval before execution.
+
 ## Quick start
 
 ```bash
@@ -63,6 +79,14 @@ chmod +x ~/.claude/hooks/*.sh
 
 # 4. Start your MEMORY.md with the template
 cp templates/MEMORY.md.tmpl ~/.claude/projects/<project>/memory/MEMORY.md
+
+# 5. Install the agent team (project-level OR user-level)
+cp -r agents/. .claude/agents/                     # project-level
+# or:
+cp -r agents/. ~/.claude/agents/                   # user-level
+
+# 6. Optional — adopt the orchestrator prompt as your CLAUDE.md
+cp examples/orchestrator-prompt.md ./CLAUDE.md     # then edit <COMPANY>/<PRODUCT>
 ```
 
 ## Status
@@ -73,7 +97,9 @@ See [CHANGELOG.md](CHANGELOG.md) for what's landed.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Apache 2.0 over MIT for the explicit patent grant + termination clause — relevant for AI tooling where patent risk is non-zero.
 
 ## Credits
 
