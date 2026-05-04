@@ -6,14 +6,16 @@ A practical, file-based memory system and multi-agent framework for [Claude Code
 
 ## What's here
 
-| Folder | Contents |
+| Folder / file | Contents |
 |--------|----------|
 | [`agents/`](agents/) | **11 specialized subagents** (developer, architect, DBA, QA, reviewer, security, designer, devops, researcher, analyst, writer) with safety rails + shared patterns |
-| [`docs/`](docs/) | Architecture, memory types, lifecycle rules, conflict detection, token budget |
-| [`templates/`](templates/) | Drop-in `.tmpl` files: `MEMORY.md`, `INDEX.md`, memory entries, agent SKILL |
+| [`docs/`](docs/) | Architecture, memory types, lifecycle rules, conflict detection, token budget, **KMF guide**, **Obsidian graph setup**, **Caveman integration** |
+| [`templates/`](templates/) | Drop-in `.tmpl` files: `MEMORY.md`, `INDEX.md`, memory entries, agent SKILL, **CLAUDE.md (top + subfolder)**, **manifest.json**, **infra.json** |
 | [`hooks/`](hooks/) | Shell hooks: post-memory-write conflict scan, session-start health check, memory rotation |
 | [`slash-commands/`](slash-commands/) | `/brain-status`, `/brain-rotate`, `/brain-conflict` |
+| [`scripts/`](scripts/) | `regen-manifest.py` — rebuild `manifest.json` + `infra.json` from your KMF files |
 | [`examples/`](examples/) | Sanitized real example + [orchestrator-prompt template](examples/orchestrator-prompt.md) |
+| [`KMF.md`](KMF.md) | **Knowledge Memory Format spec** — typed frontmatter + section schema + symbol shorthand for token-efficient memory |
 
 ## Core ideas
 
@@ -36,6 +38,12 @@ Closed projects don't sit in `MEMORY.md` forever. Pattern: when `project_*` tick
 
 ### 5. Conflict detection over duplication
 Three files describing the same service is the failure mode that costs the most tokens AND causes wrong recommendations. The hooks scan for it.
+
+### 6. KMF — typed frontmatter + section schema
+Once your brain has 50+ files, plain markdown stops scaling. KMF gives every file typed frontmatter (`id`, `type`, `v`, `tags`, `refs`), enforces a small set of H2 sections per type (e.g. `## ROLE / STACK / RULES / REFS` for agents), and uses symbol shorthand (`→`, `@`, `>`, `!`). A `regen-manifest.py` script then builds a single `manifest.json` covering the whole brain — one read replaces dozens of greps. See [`KMF.md`](KMF.md) and [`docs/kmf.md`](docs/kmf.md).
+
+### 7. Per-folder `CLAUDE.md`
+Claude Code auto-loads `CLAUDE.md` from the working directory and parents. Drop a 20-line `CLAUDE.md` into each brain subfolder (`Agents/`, `Decisions/`, `Knowledge/`, ...) telling the coordinator where to look first in that folder. Free context, picked up automatically. See [`templates/CLAUDE.md.subfolder.tmpl`](templates/CLAUDE.md.subfolder.tmpl).
 
 ## Token budget — what loading "memory" actually costs
 
@@ -87,6 +95,17 @@ cp -r agents/. ~/.claude/agents/                   # user-level
 
 # 6. Optional — adopt the orchestrator prompt as your CLAUDE.md
 cp examples/orchestrator-prompt.md ./CLAUDE.md     # then edit <COMPANY>/<PRODUCT>
+
+# 7. Optional — adopt KMF + the manifest workflow
+cp KMF.md <brain>/                                       # the format spec
+cp templates/CLAUDE.md.brain.tmpl <brain>/CLAUDE.md      # top-level coordinator hint
+cp templates/CLAUDE.md.subfolder.tmpl <brain>/Agents/CLAUDE.md
+cp -r scripts <brain>/                                   # manifest regen script
+python3 <brain>/scripts/regen-manifest.py                # generate manifest.json + infra.json
+
+# 8. Optional — caveman ecosystem (output / MCP / graph compression)
+# See docs/caveman-integration.md for the full menu. Minimal install:
+curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
 ```
 
 ## Status
