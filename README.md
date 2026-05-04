@@ -1,5 +1,28 @@
 # Ai-Brain-Open
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
+  <a href="https://github.com/agentsmd/agents.md"><img src="https://img.shields.io/badge/AGENTS.md-v1.1-blue.svg" alt="AGENTS.md v1.1"></a>
+  <a href="./KMF.md"><img src="https://img.shields.io/badge/KMF-v1-orange.svg" alt="KMF v1"></a>
+  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Claude%20Code-compatible-7C3AED.svg?logo=anthropic&logoColor=white" alt="Claude Code"></a>
+  <a href="https://developers.openai.com/codex/guides/agents-md"><img src="https://img.shields.io/badge/Codex-compatible-10A37F.svg?logo=openai&logoColor=white" alt="Codex"></a>
+  <a href="https://cursor.com"><img src="https://img.shields.io/badge/Cursor-compatible-1F2937.svg" alt="Cursor"></a>
+  <a href="https://github.com/features/copilot"><img src="https://img.shields.io/badge/Copilot-compatible-2DA44E.svg?logo=github&logoColor=white" alt="GitHub Copilot"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Zatto-Software/brain-ai"><img src="https://img.shields.io/badge/GitHub%20Mirror-Zatto--Software%2Fbrain--ai-181717.svg?logo=github&logoColor=white" alt="GitHub Mirror"></a>
+  <a href="https://zatto.dev"><img src="https://img.shields.io/badge/Built%20at-zatto.dev-blueviolet.svg" alt="Built at zatto.dev"></a>
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Memory-Karpathy%20Wiki-FF6B6B.svg" alt="Memory: Karpathy LLM Wiki">
+  <img src="https://img.shields.io/badge/Agents-11%20roles-4ECDC4.svg" alt="11 agent roles">
+  <img src="https://img.shields.io/badge/Token%20saving-~80%25-success.svg" alt="~80% token reduction">
+  <img src="https://img.shields.io/badge/Built%20with-%E2%9D%A4-red.svg" alt="Built with love">
+</p>
+
 A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [Zatto Software](https://zatto.dev).
 
 > **Why this exists:** Claude Code's built-in memory works, but without convention it bloats fast. Files duplicate, descriptions creep past 150 chars, stale data lingers, and every turn loads more tokens than it should. This repo is the framework we built to keep our `AI-Brain` lean while scaling to 11 specialized AI agents.
