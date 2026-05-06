@@ -25,7 +25,7 @@
 
 A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [Zatto Software](https://zatto.dev).
 
-> **Why this exists:** Claude Code's built-in memory works, but without convention it bloats fast. Files duplicate, descriptions creep past 150 chars, stale data lingers, and every turn loads more tokens than it should. This repo is the framework we built to keep our `AI-Brain` lean while scaling to 11 specialized AI agents.
+> **Why this exists:** Claude Code's built-in memory works, but without convention it bloats fast. Files duplicate, descriptions creep past 150 chars, stale data lingers, and every turn loads more tokens than it should. This repo is the framework we built to keep our `AI-Brain` lean while scaling to a multi-agent team.
 
 ## What's here
 
@@ -45,7 +45,7 @@ A practical, file-based memory system and multi-agent framework for [Claude Code
 ### 1. Three layers of persistence
 - **Index layer** — `MEMORY.md` (~30 lines, loaded every turn). Shortlinks only. Hard cap: 80 chars per line.
 - **File layer** — one memory per file (`feedback_*`, `project_*`, `reference_*`, `user_*`). Loaded on demand.
-- **Archive layer** — `Decisions/` (ADR). Closed projects move here; out of MEMORY.md.
+- **Archive layer** — `Decisions/` (ADRs). Closed projects move here; out of `MEMORY.md`.
 
 ### 2. Four memory types
 - `user` — who the user is, how they work, preferences
@@ -68,6 +68,56 @@ Once your brain has 50+ files, plain markdown stops scaling. KMF gives every fil
 ### 7. Per-folder `CLAUDE.md`
 Claude Code auto-loads `CLAUDE.md` from the working directory and parents. Drop a 20-line `CLAUDE.md` into each brain subfolder (`Agents/`, `Decisions/`, `Knowledge/`, ...) telling the coordinator where to look first in that folder. Free context, picked up automatically. See [`templates/CLAUDE.md.subfolder.tmpl`](templates/CLAUDE.md.subfolder.tmpl).
 
+### 8. Per-agent model routing
+Each agent declares `model:` in its `SKILL.md` frontmatter. Architects → `opus` (slow, expensive, smart). Developers → `sonnet` (fast, cheap, competent). Writers → `haiku` (cheapest). ~70% of work doesn't need `opus` — and now we measure it (see Observability below).
+
+### 9. Skills auto-load — zero token cost when not triggered
+Claude Code's [Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) load only when their `description:` matches the task. We curate a set per agent role instead of dumping everything into the system prompt.
+
+## Recommended skill set (production-tested)
+
+These are the [Anthropic Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) we wire into agents. Drop them into `~/.claude/skills/` and they activate automatically by description match.
+
+| Category | Skill | Source | Triggers when… |
+|----------|-------|--------|----------------|
+| Engineering | `systematic-debugging` | [obra/superpowers](https://github.com/obra/superpowers) | a bug, test failure, or unexpected behavior shows up |
+| Engineering | `verification-before-completion` | [obra/superpowers](https://github.com/obra/superpowers) | the agent is about to claim "done" / "fixed" / "passing" |
+| Engineering | `using-git-worktrees` | [obra/superpowers](https://github.com/obra/superpowers) | feature work needs isolation from current workspace |
+| UI / Frontend | `frontend-design` | [anthropics/skills](https://github.com/anthropics/skills) | building UI, design system, or styling work |
+| UI / Frontend | `webapp-testing` | [anthropics/skills](https://github.com/anthropics/skills) | browser-based e2e / smoke tests via Playwright |
+| Docs | `pdf`, `docx`, `xlsx` | [anthropics/skills](https://github.com/anthropics/skills) | producing or extracting from those file formats |
+| Data & Observability | `dashboard-specification` | [nimrodfisher/data-analytics-skills](https://github.com/nimrodfisher/data-analytics-skills) | new dashboard or redesign — gather requirements first |
+| Data & Observability | `visualization-builder` | nimrodfisher | choosing chart type, color, layout |
+| Data & Observability | `query-validation` | nimrodfisher | SQL review before deploy |
+| Data & Observability | `time-series-analysis` | nimrodfisher | trends, anomalies, seasonality, forecasting |
+| Data & Observability | `metric-reconciliation` | nimrodfisher | two sources disagree — find the root cause |
+| Data & Observability | `root-cause-investigation` | nimrodfisher | spike, regression, on-call debug |
+
+`description:` quality matters more than skill count. A bad description triggers on the wrong tasks and wastes a load. Keep them under 150 chars and lead with the trigger ("Use when…").
+
+## Observability — measure, don't guess
+
+If you can't see what context loads on each turn, you can't optimize it.
+
+We added a self-observation layer: every Claude Code session writes JSONL transcripts; a sync script normalizes them into Postgres; Grafana renders cost-per-session, tokens-per-model, cache hit rate, and top-cost sessions.
+
+```
+~/.claude/projects/**/*.jsonl
+        │
+        ▼
+   sync (incremental, idempotent)  ───►  Postgres  ───►  Grafana
+        │                                                  ▲
+        ▼                                                  │
+   Prometheus exporter (ccusage daily) ─────────────────────┘
+```
+
+What this unlocks:
+- **Per-agent cost slicing** — which `SKILL.md` actually pays back its `opus` routing
+- **Cache hit rate** — instantly tells you when `MEMORY.md` index drift is hurting
+- **Session distribution** — find the long-tail expensive sessions before they become a habit
+
+The tooling (sync script, exporter, dashboard JSON) lives in our private mirror. We'll publish a sanitized version after first community feedback — open an issue if you want it sooner.
+
 ## Token budget — what loading "memory" actually costs
 
 | Layer | Loaded when | Typical size |
@@ -76,9 +126,10 @@ Claude Code auto-loads `CLAUDE.md` from the working directory and parents. Drop 
 | `MEMORY.md` index | Every turn | ≤30 lines (~600 tok) |
 | Individual memory file | On grep / on relevance | 30–60 lines each |
 | Agent `SKILL.md` | On delegation only | Compress to ~100 lines |
+| Skill (Anthropic) | On description match | 0 when idle, 1–3K when fired |
 | `INDEX.md` (lookup) | On `Read` only | ≤100 lines |
 
-**Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: ~2K. See [`docs/token-budget.md`](docs/token-budget.md).
+**Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: **~2K** — a sustained ~70% reduction. See [`docs/token-budget.md`](docs/token-budget.md).
 
 ## The 11-agent team
 
@@ -129,13 +180,26 @@ python3 <brain>/scripts/regen-manifest.py                # generate manifest.jso
 # 8. Optional — caveman ecosystem (output / MCP / graph compression)
 # See docs/caveman-integration.md for the full menu. Minimal install:
 curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
+
+# 9. Optional — wire up the recommended Anthropic Agent Skills
+git clone https://github.com/obra/superpowers /tmp/superpowers
+git clone https://github.com/anthropics/skills /tmp/anthropics-skills
+git clone https://github.com/nimrodfisher/data-analytics-skills /tmp/nfdata
+cp -r /tmp/superpowers/skills/{systematic-debugging,verification-before-completion,using-git-worktrees} ~/.claude/skills/
+cp -r /tmp/anthropics-skills/skills/{frontend-design,webapp-testing,pdf,docx,xlsx} ~/.claude/skills/
+cp -r /tmp/nfdata/skills/* ~/.claude/skills/
 ```
+
+## What's new
+
+- **2026-05** — Per-agent model routing made measurable. Recommended skill set documented. Observability section added (Postgres + Grafana stack outline). Worked example updated to a 13-agent team.
+- **2026-04** — Initial public release. Three-layer persistence, four memory types, flat-lookup `INDEX.md`, lifecycle hooks, conflict detection.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full log.
 
 ## Status
 
-This framework is being extracted from a working private setup. The patterns here are battle-tested; tooling (hooks, slash commands) is in active development.
-
-See [CHANGELOG.md](CHANGELOG.md) for what's landed.
+This framework is being extracted from a working private setup. The patterns here are battle-tested; tooling (hooks, slash commands, observability bridge) is in active development.
 
 ## License
 
@@ -148,3 +212,10 @@ Apache 2.0 over MIT for the explicit patent grant + termination clause — relev
 Maintained by Mariusz Laszewski / [Zatto Software](https://zatto.dev).
 
 Open-sourced because every Claude Code user re-discovers the same memory hygiene and agent-coordination problems independently. Skip that step — fork what works, replace what doesn't.
+
+Inspirations and components we lean on:
+
+- [agentsmd/agents.md](https://github.com/agentsmd/agents.md) — `AGENTS.md` interop spec
+- [Andrej Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — self-maintaining knowledge base pattern
+- [Anthropic Agent Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) — `SKILL.md` spec
+- [obra/superpowers](https://github.com/obra/superpowers), [anthropics/skills](https://github.com/anthropics/skills), [nimrodfisher/data-analytics-skills](https://github.com/nimrodfisher/data-analytics-skills) — production skills we ship to agents

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added — 2026-05
+- README: per-agent model routing as core idea #8 (`opus` / `sonnet` / `haiku`)
+- README: skills auto-load as core idea #9 — Anthropic Agent Skills load by description match
+- README: recommended skill set table — engineering, UI, docs, data & observability — with sources (obra/superpowers, anthropics/skills, nimrodfisher/data-analytics-skills)
+- README: observability section — Postgres + Prometheus + Grafana sketch for measuring per-session cost, cache hit rate, and per-agent ROI
+- README: optional Quick Start step #9 to wire up the recommended skill set
+- Token budget table: added `Skill (Anthropic)` row — 0 cost idle, 1–3K when fired
+
 ### Added — KMF layer
 - `KMF.md` — Knowledge Memory Format spec: typed frontmatter (`id`, `type`, `v`, `tags`, `refs`, `updated`), per-type section schema (`agent` / `adr` / `runbook` / `infra` / `knowledge` / `conv`), symbol shorthand (`→`, `@`, `>`, `!`), semantic refs (`@agent:<name>`, `@adr:<id>`, `@infra:<host>`, `@secrets:<key>`)
 - `scripts/regen-manifest.py` — generate `manifest.json` (every KMF file) + `infra.json` (parsed from `INDEX.md` tables) in one pass; replaces dozens of greps with a single read
