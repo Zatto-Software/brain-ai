@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added — 2026-05
+- `agents/graffy-observability/` — 12th subagent (Grafana / PromQL / SQL / alert design / metric modeling); roster, pipelines, and model-tier table updated
+- README: 11 → 12 agent count (badge, "What's here" table, "The 12-agent team" section); new Dashboard pipeline added
 - README: per-agent model routing as core idea #8 (`opus` / `sonnet` / `haiku`)
 - README: skills auto-load as core idea #9 — Anthropic Agent Skills load by description match
 - README: recommended skill set table — engineering, UI, docs, data & observability — with sources (obra/superpowers, anthropics/skills, nimrodfisher/data-analytics-skills)

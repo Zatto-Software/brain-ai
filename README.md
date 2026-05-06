@@ -18,7 +18,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Memory-Karpathy%20Wiki-FF6B6B.svg" alt="Memory: Karpathy LLM Wiki">
-  <img src="https://img.shields.io/badge/Agents-11%20roles-4ECDC4.svg" alt="11 agent roles">
+  <img src="https://img.shields.io/badge/Agents-12%20roles-4ECDC4.svg" alt="12 agent roles">
   <img src="https://img.shields.io/badge/Token%20saving-~80%25-success.svg" alt="~80% token reduction">
   <img src="https://img.shields.io/badge/Built%20with-%E2%9D%A4-red.svg" alt="Built with love">
 </p>
@@ -31,7 +31,7 @@ A practical, file-based memory system and multi-agent framework for [Claude Code
 
 | Folder / file | Contents |
 |--------|----------|
-| [`agents/`](agents/) | **11 specialized subagents** (developer, architect, DBA, QA, reviewer, security, designer, devops, researcher, analyst, writer) with safety rails + shared patterns |
+| [`agents/`](agents/) | **12 specialized subagents** (developer, architect, DBA, QA, reviewer, security, designer, devops, observability, researcher, analyst, writer) with safety rails + shared patterns |
 | [`docs/`](docs/) | Architecture, memory types, lifecycle rules, conflict detection, token budget, **KMF guide**, **Obsidian graph setup**, **Caveman integration** |
 | [`templates/`](templates/) | Drop-in `.tmpl` files: `MEMORY.md`, `INDEX.md`, memory entries, agent SKILL, **CLAUDE.md (top + subfolder)**, **manifest.json**, **infra.json** |
 | [`hooks/`](hooks/) | Shell hooks: post-memory-write conflict scan, session-start health check, memory rotation |
@@ -131,9 +131,9 @@ The tooling (sync script, exporter, dashboard JSON) lives in our private mirror.
 
 **Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: **~2K** — a sustained ~70% reduction. See [`docs/token-budget.md`](docs/token-budget.md).
 
-## The 11-agent team
+## The 12-agent team
 
-A coordinator (the main Claude session) routes work through eleven specialized subagents. Each has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
+A coordinator (the main Claude session) routes work through twelve specialized subagents. Each has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
 
 Standard pipelines look like:
 
@@ -142,6 +142,7 @@ Feature      analyst → architect → developer → qa → reviewer → devops
 Bug          developer → qa → reviewer
 Research     researcher → architect (ADR)
 Security     security (audit) → developer (fix) → security (verify)
+Dashboard    architect → observability → developer → devops → qa
 ```
 
 Safety: every agent reads [`agents/_shared/SAFETY.md`](agents/_shared/SAFETY.md). Tier 1 actions (force-push to main, drop prod tables, exfiltrate secrets) are PROHIBITED. Tier 2 (prod deploys, schema migrations, paid API calls) require explicit human approval before execution.

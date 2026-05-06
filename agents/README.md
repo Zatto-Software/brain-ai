@@ -1,6 +1,6 @@
 # Agents
 
-Eleven specialized AI subagents for Claude Code. Battle-tested at Zatto Software, refactored for general use.
+Twelve specialized AI subagents for Claude Code. Battle-tested at Zatto Software, refactored for general use.
 
 Each agent lives in its own folder with a `SKILL.md` that defines:
 - **Frontmatter:** `name`, `description` (with explicit triggers + anti-triggers), `tools` allowlist, `model`
@@ -21,6 +21,7 @@ Each agent lives in its own folder with a `SKILL.md` that defines:
 | [`straz-security`](straz-security/SKILL.md) | Security Engineer | Audits, threat modeling, hardening |
 | [`pixel-designer`](pixel-designer/SKILL.md) | UI/UX + Frontend | Visual design + frontend implementation |
 | [`olek-devops`](olek-devops/SKILL.md) | Infrastructure Engineer | Docker, CI/CD, deploys, monitoring |
+| [`graffy-observability`](graffy-observability/SKILL.md) | Observability & Data-Viz Specialist | Grafana dashboards, PromQL/SQL, alerts, metric design |
 | [`sowa-researcher`](sowa-researcher/SKILL.md) | Tech Research Analyst | Library / framework / pattern evaluation |
 | [`nika-analyst`](nika-analyst/SKILL.md) | Business Analyst | User stories, sprint planning, KPIs |
 | [`klio-writer`](klio-writer/SKILL.md) | Tech Writer | Docs, README, changelogs, UI copy |
@@ -45,6 +46,8 @@ Security audit straz-security (audit) → borys-developer (fixes) → straz-secu
 New page       pixel-designer (design+UI) → borys-developer (logic) → teo-qa → rena-reviewer
 Sprint plan    nika-analyst → orchestrator (push to Plane / Linear / Jira)
 DB optimize    daga-dba (analyze+plan) → borys-developer (apply ORM changes) → teo-qa
+Dashboard      atlas-architect (what to measure) → graffy-observability (panels+alerts) → borys-developer (instrumentation) → olek-devops (provision) → teo-qa
+Metric drop    graffy-observability (RCA) → borys-developer (fix) → teo-qa (regression)
 ```
 
 ## Naming convention
@@ -67,7 +70,7 @@ cp -r path/to/Ai-Brain-Open/agents/* ~/.claude/agents/
 ```
 
 ### Pick a subset
-You don't need all 11. For a typical web app project, the minimum useful set is:
+You don't need all 12. For a typical web app project, the minimum useful set is:
 - `borys-developer`
 - `teo-qa`
 - `rena-reviewer`
@@ -82,7 +85,7 @@ The `model:` field in each SKILL.md is a default — override per project / cost
 | Tier | Agents | Why |
 |------|--------|-----|
 | **Opus** | `atlas-architect`, `rena-reviewer`, `straz-security`, `sowa-researcher` | Reasoning-heavy, low frequency, high stakes |
-| **Sonnet** | `borys-developer`, `daga-dba`, `pixel-designer`, `olek-devops`, `teo-qa`, `nika-analyst`, `klio-writer` | Execution + good-enough reasoning, high frequency |
+| **Sonnet** | `borys-developer`, `daga-dba`, `pixel-designer`, `olek-devops`, `graffy-observability`, `teo-qa`, `nika-analyst`, `klio-writer` | Execution + good-enough reasoning, high frequency |
 | **Haiku** | (none default — but `teo-qa` and `klio-writer` work well on Haiku for simple tasks) | Speed / cost-sensitive routine work |
 
 ## Customizing
