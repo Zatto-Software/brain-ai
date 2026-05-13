@@ -23,7 +23,7 @@
   <img src="https://img.shields.io/badge/Built%20with-%E2%9D%A4-red.svg" alt="Built with love">
 </p>
 
-A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [Zatto Software](https://zatto.dev).
+A practical, file-based memory system and multi-agent framework for [Claude Code](https://claude.ai/code) — production-tested at [zatto.dev](https://zatto.dev).
 
 > **Why this exists:** Claude Code's built-in memory works, but without convention it bloats fast. Files duplicate, descriptions creep past 150 chars, stale data lingers, and every turn loads more tokens than it should. This repo is the framework we built to keep our `AI-Brain` lean while scaling to a multi-agent team.
 
@@ -131,9 +131,9 @@ The tooling (sync script, exporter, dashboard JSON) lives in our private mirror.
 
 **Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: **~2K** — a sustained ~70% reduction. See [`docs/token-budget.md`](docs/token-budget.md).
 
-## The 12-agent team
+## The 13-agent team
 
-A coordinator (the main Claude session) routes work through twelve specialized subagents. Each has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
+A coordinator (the main Claude session) routes work through thirteen specialized subagents — including **`hire-recruiter`** (NEW), an AI agent recruiter that designs and writes SKILL.md files for new agents based on market research rather than guesswork. Each agent has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
 
 Standard pipelines look like:
 
@@ -146,6 +146,27 @@ Dashboard    architect → observability → developer → devops → qa
 ```
 
 Safety: every agent reads [`agents/_shared/SAFETY.md`](agents/_shared/SAFETY.md). Tier 1 actions (force-push to main, drop prod tables, exfiltrate secrets) are PROHIBITED. Tier 2 (prod deploys, schema migrations, paid API calls) require explicit human approval before execution.
+
+## Showcase — Pixel now generates raster assets inline
+
+The `pixel-designer` agent ships with a new cross-cutting capability: while designing UI, it can generate raster assets (backgrounds, illustrations, mockups, patterns) inline through the [`nano-banana`](https://github.com/kingbootoshi/nano-banana-2-skill) CLI (Gemini 3 Flash by default, Pro on demand). Pixel decides for itself when a raster asset is needed and when SVG/CSS is the better choice, then enriches the prompt with the project's palette + mood + anti-AI-slop guards before calling the CLI.
+
+Three real outputs (Gemini 3 Flash, ~$0.10/image average), generated end-to-end through Pixel's enrichment pipeline:
+
+![Hero — neural network](docs/images/pixel-demo/01-hero-brain-network.jpeg)
+*Hero banner, 2K, 16:9 — `"abstract dark neural network, navy #0A1628 + slate #334155 + teal #14B8A6 accents, photorealistic, no AI art aesthetic, no gradient meshes"`*
+
+<table>
+<tr>
+<td width="55%"><img src="docs/images/pixel-demo/02-agent-team-isometric.jpeg" alt="Agent team — isometric"></td>
+<td width="45%"><b>Agent-team illustration</b>, 1K, 4:3 — twelve distinct geometric figures connected by teal accent lines, editorial minimal style. Generated with the same palette enrichment and anti-slop guards.</td>
+</tr>
+</table>
+
+![Pipeline — workflow flow](docs/images/pixel-demo/03-pipeline-flow.jpeg)
+*Pipeline visualization, 1K, 21:9 — five connected modules, panoramic widescreen, restrained editorial composition.*
+
+How Pixel triggers this in practice — full spec in [`agents/pixel-designer/SKILL.md`](agents/pixel-designer/SKILL.md#image-generation-nano-banana-cli--cross-cutting-capability) under *Image generation (Nano Banana CLI)*. Budget guardrails are enforceable (max 3 retries per task, Flash default, Pro reserved for hero/brand-critical, cost logged in every response). Pre-flight check refuses to run when `nano-banana` is missing or `$GEMINI_API_KEY` is not set.
 
 ## Quick start
 
@@ -193,7 +214,7 @@ cp -r /tmp/nfdata/skills/* ~/.claude/skills/
 
 ## What's new
 
-- **2026-05** — Per-agent model routing made measurable. Recommended skill set documented. Observability section added (Postgres + Grafana stack outline). Worked example updated to a 13-agent team.
+- **2026-05** — **`hire-recruiter` agent added** (13th agent — designs new SKILL.md files based on real-world market research, not guesswork). **`pixel-designer` extended with inline image generation** via [`nano-banana`](https://github.com/kingbootoshi/nano-banana-2-skill) CLI (Gemini 3 Flash/Pro) — see Showcase. Per-agent model routing made measurable. Recommended skill set documented. Observability section added (Postgres + Grafana stack outline).
 - **2026-04** — Initial public release. Three-layer persistence, four memory types, flat-lookup `INDEX.md`, lifecycle hooks, conflict detection.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full log.
@@ -210,7 +231,7 @@ Apache 2.0 over MIT for the explicit patent grant + termination clause — relev
 
 ## Credits
 
-Maintained by Mariusz Laszewski / [Zatto Software](https://zatto.dev).
+Maintained by Mariusz Laszewski / [zatto.dev](https://zatto.dev).
 
 Open-sourced because every Claude Code user re-discovers the same memory hygiene and agent-coordination problems independently. Skip that step — fork what works, replace what doesn't.
 
