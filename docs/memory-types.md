@@ -104,3 +104,61 @@ If still unclear: it's `project`. Project memories are the most aggressively cle
 | `MEMORY.md` past 100 entries | No archival happening; closed projects sitting in index |
 | Claude recommends a function that doesn't exist | `reference` memory not verified before recommending; should grep first |
 | Same correction given multiple times | Feedback memory not saved (or saved but description too vague to surface) |
+
+## Karpathy 3-layer LLM-Wiki (v3 extension)
+
+The four memory types above are the **content typology**. The 3-layer wiki is the **lifecycle typology** — orthogonal, complementary. Both apply.
+
+```
+Layer 1 — DAILY   memory/YYYY-MM-DD.md        raw, append-only
+              ↓   consolidate.py (≥5 dailies, ≥24h gap)
+Layer 2 — TOPICS  memory/topics/<slug>.md     curated, KMF, type: memory-topic
+              ↓   promote / archive (traffic + freshness)
+Layer 3 — INDEX   MEMORY.md                   hot, always loaded, cap 200 lines
+```
+
+### Layer 1 — daily
+- Append-only. NEVER edit historical daily logs (audit-trail invariant).
+- Fragments + `HH:MM` timestamp.
+- Inline `#topic-slug` tags so consolidate can group.
+- No frontmatter (raw).
+
+### Layer 2 — topics
+KMF frontmatter required:
+```yaml
+---
+id: topic-<slug>
+type: memory-topic
+v: 1
+tags: [...]
+refs: [@agent:X, @adr:Y]
+updated: YYYY-MM-DD
+---
+```
+- Update when contradicting info arrives → mark old fragment `superseded:`, don't delete.
+- 9:1 compression target from source dailies.
+- Lifecycle: born (≥5 dailies tagged) → active (linked in MEMORY.md) → stale (>90d, no recent dailies) → archived (moved to `memory/topics/_archive/`).
+
+### Layer 3 — index
+- Cap 200 lines (hook truncates beyond).
+- One topic = 1 line ≤150 chars.
+- Order: active themes > stable contexts > archive.
+
+### Compression budget
+
+| Layer | Avg size | Compression |
+|-------|----------|-------------|
+| Daily (raw) | 50-200 lines/file | 1:1 |
+| Topic (curated) | 80-150 lines | 9:1 vs source dailies |
+| Index entry | 1 line/topic | ~100:1 vs topic |
+
+Target: full hot context ≤200 lines, ~30KB cold per active topic.
+
+### Operations
+
+- Append (every session): write to today's daily, no edits to historicals.
+- Consolidate (weekly / on demand): `python3 scripts/consolidate.py` → bibliotekarz-curator does the LLM pass.
+- Promote / archive: traffic + freshness scoring, manual approval.
+- Lint: `python3 scripts/memory-lint.py` — orphan refs, contradictions, stale, duplicates, daily-edit (error).
+
+The curator agent that owns this: `agents/bibliotekarz-curator/SKILL.md`.

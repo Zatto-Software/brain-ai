@@ -80,6 +80,34 @@ echo "Long MEMORY entries (>80c): $(awk 'length > 80' <PROJECT>/memory/MEMORY.md
 
 If any of those exceeds the target column above, you have token leak. The slash command `/brain-status` automates this check.
 
+## Daily spend + cache hit rate — `/token-budget`
+
+Knowing the per-turn fixed cost is the static side. The dynamic side is "what am I actually paying?" — and that needs measurement.
+
+`/token-budget [N_days]` (script: `scripts/token-budget.py`) wraps `ccusage daily --json` and reports:
+
+- **Per-day breakdown**: cost USD, total tokens, cache hit %, models used.
+- **Summary**: total cost, avg/median per day, avg/min hit rate.
+- **Anomalies**: days with cost >2× rolling median, days with hit rate <50%.
+
+### Cache hit rate, explained
+
+```
+hit_rate = cache_read / (cache_read + cache_creation + input)
+```
+
+A high hit rate means Claude is re-using cached prompt prefixes — the cheap path. A low hit rate (<50%) means either the prompt prefix changed (e.g. you edited `CLAUDE.md` or `MEMORY.md`) or a large new context was loaded fresh.
+
+### Practical use
+
+- **After a memory refactor**: run `/token-budget 7` to confirm the avg hit rate didn't regress.
+- **During cost investigation**: a day flagged ">2× median" → drill down with `ccusage session --since <date>` and check which sessions / projects dominated.
+- **For model routing decisions**: the per-day models column shows whether opus crept into work that should have stayed on sonnet/haiku.
+
+### Roadmap
+
+A future `kompresor-economist` agent (currently a placeholder) will do this audit on a monthly cron with structured recommendations for which SKILL.md or manifest entry to compress. For now, the slash command + the human reading the output is the workflow.
+
 ## What this isn't
 
 This is a budget for *fixed* memory cost — what's loaded automatically each turn. It's not a budget for the conversation itself, tool outputs, or files Claude reads during work. Those are unbounded by nature; the goal here is to make the part you control as small as possible so the part you don't has more room.

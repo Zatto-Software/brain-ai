@@ -177,3 +177,18 @@ $ npm test
 For agents that DON'T write files (`rena-reviewer`, `straz-security` audit-only, `sowa-researcher`, `nika-analyst` planning-only): omit the Branch + PR section, keep the rest.
 
 **Used by:** all subagents.
+
+## Delegation template (O/CT/OF/TG/TB/SC)
+
+For non-trivial delegations to a subagent, structure the prompt with these six fields:
+
+- **O** (Objective) — one sentence, concrete goal
+- **CT** (Context) — what is already known / excluded, with file:line refs
+- **OF** (Output Format) — exact shape of the deliverable
+- **TG** (Tools Granted) — explicit allowlist (≤5)
+- **TB** (Tools Blocked) — explicit deny list (always include if anything is destructive)
+- **SC** (Success Criteria) — how the orchestrator will verify, ≤3 points
+
+Full template, examples, and per-agent tool defaults: [SUBAGENT_PROMPTS.md](./SUBAGENT_PROMPTS.md).
+
+**Used by:** the orchestrator, every time a subagent is launched for a task >5 minutes or >3 files.

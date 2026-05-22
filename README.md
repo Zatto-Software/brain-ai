@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
-  <a href="https://github.com/agentsmd/agents.md"><img src="https://img.shields.io/badge/AGENTS.md-v1.1-blue.svg" alt="AGENTS.md v1.1"></a>
+  <a href="https://github.com/agentsmd/agents.md"><img src="https://img.shields.io/badge/AGENTS.md-v1.2-blue.svg" alt="AGENTS.md v1.2"></a>
   <a href="./KMF.md"><img src="https://img.shields.io/badge/KMF-v1-orange.svg" alt="KMF v1"></a>
   <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Claude%20Code-compatible-7C3AED.svg?logo=anthropic&logoColor=white" alt="Claude Code"></a>
   <a href="https://developers.openai.com/codex/guides/agents-md"><img src="https://img.shields.io/badge/Codex-compatible-10A37F.svg?logo=openai&logoColor=white" alt="Codex"></a>
@@ -18,7 +18,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Memory-Karpathy%20Wiki-FF6B6B.svg" alt="Memory: Karpathy LLM Wiki">
-  <img src="https://img.shields.io/badge/Agents-12%20roles-4ECDC4.svg" alt="12 agent roles">
+  <img src="https://img.shields.io/badge/Agents-19%20roles-4ECDC4.svg" alt="19 agent roles">
+  <img src="https://img.shields.io/badge/MCP-4%20servers-9B5DE5.svg" alt="4 MCP servers">
   <img src="https://img.shields.io/badge/Token%20saving-~80%25-success.svg" alt="~80% token reduction">
   <img src="https://img.shields.io/badge/Built%20with-%E2%9D%A4-red.svg" alt="Built with love">
 </p>
@@ -31,12 +32,12 @@ A practical, file-based memory system and multi-agent framework for [Claude Code
 
 | Folder / file | Contents |
 |--------|----------|
-| [`agents/`](agents/) | **12 specialized subagents** (developer, architect, DBA, QA, reviewer, security, designer, devops, observability, researcher, analyst, writer) with safety rails + shared patterns |
-| [`docs/`](docs/) | Architecture, memory types, lifecycle rules, conflict detection, token budget, **KMF guide**, **Obsidian graph setup**, **Caveman integration** |
+| [`agents/`](agents/) | **19 specialized subagents** (13 base: developer, architect, DBA, QA, reviewer, security, designer, devops, observability, researcher, analyst, writer, recruiter; **+5 v3:** memory curator, QMS lead auditor, ISMS lead auditor, token economist (placeholder), external deep auditor) with safety rails + shared patterns + **progressive-disclosure SKILL/REFERENCE split** |
+| [`docs/`](docs/) | Architecture (incl. **L1-L4 brain-search**), memory types (incl. **Karpathy 3-layer**), lifecycle (incl. **subagent O/CT/OF/TG/TB/SC pattern**), conflict detection, token budget (incl. **`/token-budget` flow**), **KMF guide**, **Obsidian graph setup**, **Caveman integration**, **MCP servers**, **progressive disclosure**, **19-agent table** |
 | [`templates/`](templates/) | Drop-in `.tmpl` files: `MEMORY.md`, `INDEX.md`, memory entries, agent SKILL, **CLAUDE.md (top + subfolder)**, **manifest.json**, **infra.json** |
-| [`hooks/`](hooks/) | Shell hooks: post-memory-write conflict scan, session-start health check, memory rotation |
-| [`slash-commands/`](slash-commands/) | `/brain-status`, `/brain-rotate`, `/brain-conflict` |
-| [`scripts/`](scripts/) | `regen-manifest.py` — rebuild `manifest.json` + `infra.json` from your KMF files |
+| [`hooks/`](hooks/) | Shell hooks: post-memory-write conflict scan, session-start health check, memory rotation, **PreToolUse `hook-kmf-check.py` frontmatter enforcement** |
+| [`slash-commands/`](slash-commands/) | `/brain-status`, `/brain-rotate`, `/brain-conflict`, **`/consolidate-daily`**, **`/token-budget`**, **`/subagent-launch`** |
+| [`scripts/`](scripts/) | `regen-manifest.py` (builds `manifest.json` + `infra.json` + **`_search.json` FTS index**), **`memory-lint.py`** (orphans/stale/dupes/daily-edits/missing-fm), **`token-budget.py`** (ccusage wrapper), **`consolidate.py`** (daily → topics scaffold) |
 | [`examples/`](examples/) | Sanitized real example + [orchestrator-prompt template](examples/orchestrator-prompt.md) |
 | [`KMF.md`](KMF.md) | **Knowledge Memory Format spec** — typed frontmatter + section schema + symbol shorthand for token-efficient memory |
 
@@ -140,21 +141,66 @@ The tooling (sync script, exporter, dashboard JSON) lives in our private mirror.
 
 **Worst case we observed pre-optimization:** ~6K input tokens per turn just for memory boilerplate. After applying this framework: **~2K** — a sustained ~70% reduction. See [`docs/token-budget.md`](docs/token-budget.md).
 
-## The 13-agent team
+## The 19-agent team
 
-A coordinator (the main Claude session) routes work through thirteen specialized subagents — including **`hire-recruiter`** (NEW), an AI agent recruiter that designs and writes SKILL.md files for new agents based on market research rather than guesswork. Each agent has a strict scope, an explicit `tools:` allowlist, a dedicated model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. See [`agents/README.md`](agents/README.md) for the roster + pipelines.
+A coordinator (the main Claude session) routes work through nineteen specialized subagents. Each one carries an explicit scope, a `tools:` allowlist, a model recommendation, and shared safety rails so it can't accidentally drop your production database, leak a secret, or force-push to main. Full table + pipelines: [`docs/agents-19.md`](docs/agents-19.md).
 
-Standard pipelines look like:
+The roster splits into 13 base roles + 5 v3 additions + 1 external CLI:
 
 ```
-Feature      analyst → architect → developer → qa → reviewer → devops
-Bug          developer → qa → reviewer
-Research     researcher → architect (ADR)
-Security     security (audit) → developer (fix) → security (verify)
-Dashboard    architect → observability → developer → devops → qa
+Base (13):   atlas-architect borys-developer daga-dba teo-qa rena-reviewer
+             straz-security  pixel-designer  olek-devops sowa-researcher
+             nika-analyst    klio-writer     graffy-observability
+             hire-recruiter
+v3 (+5):     bibliotekarz-curator (Karpathy 3-layer memory)
+             iso-quincy           (ISO 9001 QMS Lead Auditor)
+             twoseven-isms        (ISO/IEC 27001 ISMS Lead Auditor)
+             kompresor-economist  (token economy — planned, placeholder)
+             gemini-auditor       (external CLI for deep parallel sweeps)
+```
+
+Standard pipelines:
+
+```
+Feature       nika → atlas → borys → teo → rena → olek
+Bug           borys → teo → rena
+Research      sowa → atlas (ADR)
+Security      straz (audit) → borys (fix) → straz (verify)
+Quality (QMS) iso-quincy → rena → teo
+ISMS audit    twoseven-isms → straz | olek | daga | borys → rena → twoseven (closure)
+Dashboard     atlas → graffy → borys → olek → teo
+Memory curate bibliotekarz (daily → topics consolidate + lint)
+Token audit   kompresor (monthly cron when implemented)
+Deep audit    gemini (external) → straz | daga | atlas | borys → rena
 ```
 
 Safety: every agent reads [`agents/_shared/SAFETY.md`](agents/_shared/SAFETY.md). Tier 1 actions (force-push to main, drop prod tables, exfiltrate secrets) are PROHIBITED. Tier 2 (prod deploys, schema migrations, paid API calls) require explicit human approval before execution.
+
+### Progressive disclosure — SKILL.md ≤100 lines + REFERENCE.md
+
+All base agents and the two new ISO auditors follow a two-file pattern: a short `SKILL.md` (decision-grade — when to invoke, rules, output schema) and a deeper `REFERENCE.md` (execution-grade — methods, snippets, templates). Cuts per-delegation cost ~50%. See [`docs/progressive-disclosure.md`](docs/progressive-disclosure.md).
+
+## What's new in v3
+
+- **+5 agents** (12 → 19 roles total), with progressive-disclosure SKILL+REFERENCE split applied across the board
+- **Karpathy 3-layer memory wiki** formalized (daily → topics → index) with `consolidate.py` + `memory-lint.py` scripts and the `bibliotekarz-curator` agent that owns the layer
+- **L1-L4 brain-search architecture** — `_meta.json` (hot) + `_search.json` (FTS-ready, generated by `regen-manifest.py`) + ripgrep (fallback) + Basic Memory MCP (Phase 2, semantic). Decision rationale: [`docs/architecture.md`](docs/architecture.md#l1-l4-brain-search-architecture-v3)
+- **Subagent delegation template** — six-field O/CT/OF/TG/TB/SC pattern that eliminates vague "fix the bug in X" delegations. See [`agents/_shared/SUBAGENT_PROMPTS.md`](agents/_shared/SUBAGENT_PROMPTS.md)
+- **3 new slash commands** — `/consolidate-daily`, `/token-budget`, `/subagent-launch`
+- **PreToolUse `hook-kmf-check.py`** — blocks `Write` to tracked dirs without KMF frontmatter, warns on `Edit` (see [`hooks/hook-kmf-check.py`](hooks/hook-kmf-check.py))
+- **AGENTS.md v1.2** — cross-tool interop bumped for the new agent set
+- **4 MCP servers** integrated (basic-memory, serena, sequential-thinking, repomix) — see [`docs/mcp-servers.md`](docs/mcp-servers.md)
+
+## MCP servers — recommended set
+
+| MCP | Role | Where it shines |
+|-----|------|-----------------|
+| `basic-memory` | KMF-native memory (FTS5 + sqlite-vec) | "find notes similar to this", "what did we discuss about X" |
+| `serena` | LSP semantic code search (TS / Python) | "find every caller of `createUser`", refactor sweeps |
+| `sequential-thinking` | Branchable reasoning | ADR drafting, multi-option benchmark eval |
+| `repomix` | Tree-sitter codebase compression | bulk audits, external-repo recon |
+
+Zero token cost when idle. Full config + sketch: [`docs/mcp-servers.md`](docs/mcp-servers.md).
 
 ## Showcase — Pixel now generates raster assets inline
 
@@ -223,7 +269,8 @@ cp -r /tmp/nfdata/skills/* ~/.claude/skills/
 
 ## What's new
 
-- **2026-05** — **`hire-recruiter` agent added** (13th agent — designs new SKILL.md files based on real-world market research, not guesswork). **`pixel-designer` extended with inline image generation** via [`nano-banana`](https://github.com/kingbootoshi/nano-banana-2-skill) CLI (Gemini 3 Flash/Pro) — see Showcase. Per-agent model routing made measurable. Recommended skill set documented. Observability section added (Postgres + Grafana stack outline).
+- **2026-05 (v3)** — **+5 agents** (12 → 19 roles: `bibliotekarz-curator`, `iso-quincy`, `twoseven-isms`, `kompresor-economist` placeholder, `gemini-auditor` external). **Karpathy 3-layer memory** formalized + `consolidate.py` + `memory-lint.py`. **L1-L4 brain-search architecture** (ADR-008 style hybrid: manifest + `_search.json` FTS + ripgrep + Basic Memory MCP Phase 2). **Progressive-disclosure SKILL/REFERENCE split** across the team. **3 new slash commands** (`/consolidate-daily`, `/token-budget`, `/subagent-launch`). **PreToolUse `hook-kmf-check.py`** for frontmatter enforcement. **4 MCP servers** documented (basic-memory, serena, sequential-thinking, repomix). **AGENTS.md** bumped to v1.2.
+- **2026-05** — `hire-recruiter` agent added (designs new SKILL.md files based on real-world market research, not guesswork). `pixel-designer` extended with inline image generation via [`nano-banana`](https://github.com/kingbootoshi/nano-banana-2-skill) CLI (Gemini 3 Flash/Pro) — see Showcase. Per-agent model routing made measurable. Recommended skill set documented. Observability section added (Postgres + Grafana stack outline).
 - **2026-04** — Initial public release. Three-layer persistence, four memory types, flat-lookup `INDEX.md`, lifecycle hooks, conflict detection.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full log.

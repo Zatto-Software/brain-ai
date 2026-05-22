@@ -96,3 +96,37 @@ Automation lives in `hooks/session-start.sh` — surfaces stale projects at sess
 ## What to do when the file says X but reality says Y
 
 The memory is wrong. Reality wins. Update the memory before acting on it. If you act on stale memory and only later notice the conflict, fix the memory in the *same* commit as whatever you did — or you'll forget and step on it again.
+
+## Subagent delegation lifecycle (v3)
+
+When the orchestrator hands off work to a subagent, the lifecycle has its own write → verify → record loop. The pattern lives in `agents/_shared/SUBAGENT_PROMPTS.md`; the slash entry point is `slash-commands/subagent-launch.md`.
+
+### Six-field delegation template (O/CT/OF/TG/TB/SC)
+
+```
+O  (Objective)        — one sentence, concrete
+CT (Context)          — file:line refs, what was tried/excluded, motivation
+OF (Output Format)    — exact deliverable shape (markdown sections, JSON, files)
+TG (Tools Granted)    — explicit allowlist (≤5)
+TB (Tools Blocked)    — explicit deny list (always include if anything destructive)
+SC (Success Criteria) — ≤3 verifiable points
+```
+
+The orchestrator builds this template **before** calling the `Agent` tool. The subagent returns a condensed report per `_shared/PATTERNS.md#output-to-orchestrator`. The orchestrator verifies SC by running the success-criterion commands directly — not by trusting the subagent's claim.
+
+### KMF write enforcement
+
+When a subagent writes a file under one of the tracked directories (`Agents/`, `Decisions/`, `Knowledge/`, `memory/topics/`, etc.), the `hooks/hook-kmf-check.py` PreToolUse hook validates the frontmatter:
+
+- `Write` (whole file) — **BLOCK** if KMF frontmatter is missing required fields (`id`, `type`, `v`, `tags`, `updated`).
+- `Edit` (delta) — **WARN** (non-blocking) if the new string starts with a frontmatter block and is missing fields.
+
+This is what makes the brain stay grep-able as it grows: every KMF file gets a parseable header by construction, not by discipline.
+
+### Don't-delegate rules
+
+- Task <5 minutes — spawn overhead > gain
+- Task touches <3 files — just do it in-context
+- Task requires a mid-flight human decision — subagent will block
+
+The slash command `/subagent-launch <slug> <summary>` enforces the template and refuses to spawn on these conditions.
